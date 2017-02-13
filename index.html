@@ -1,0 +1,148 @@
+<html>
+<head>
+ <title>Good Things!</title>
+ <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js" type="text/javascript"></script>
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+<script type="text/javascript" src="http://misterfresh.github.io/mapbox-animation/mapbox-gl.js" charset="utf-8"></script>
+
+<link rel="stylesheet" href = "https://unpkg.com/leaflet.markercluster@0.5.0/dist/MarkerCluster.css">
+<link rel="stylesheet" href = "https://unpkg.com/leaflet.markercluster@0.5.0/dist/MarkerCluster.Default.css">
+<script src="https://unpkg.com/leaflet.markercluster@1.0.0/dist/leaflet.markercluster.js"></script>
+
+
+  <style>
+  #map{ height: 100% }
+  </style>
+</head>
+
+<body>
+
+  <div id="map"></div>
+
+  <script>
+
+  // initialize the map
+ // set center coordinates
+var centerlat = 38.645802;
+var centerlon = -90.37687;
+//46.6753,24.7136
+// set default zoom level
+var zoomLevel = 4;
+// initialize map
+var map = L.map('map').setView([centerlat, centerlon], zoomLevel);
+
+// set source for map tiles
+ATTR = '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> | ' +
+'&copy; <a href="http://cartodb.com/attributions">CartoDB</a>';
+
+CDB_URL = 'http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
+
+// add tiles to map
+L.tileLayer(CDB_URL, {
+
+  attribution: ATTR,
+  maxZoom: 4
+ // minZoom: 9
+  }).addTo(map);
+
+
+
+
+//create empty MarkerCluster group
+var markers = L.markerClusterGroup();
+
+
+
+//---------------OLD MAP DATA
+
+
+ $.getJSON("ll_gt.geojson",function(data){
+  var Icon = L.icon({
+    iconUrl: 'blue-circle.png',
+    iconSize: [7,7]
+  });
+
+// old geo 
+abc = L.geoJson(data,{
+      pointToLayer: function(feature,latlng){
+       var marker = L.marker(latlng,{icon: Icon});
+      
+       marker.bindPopup(feature.properties.City + '<br/>' + feature.properties.Text);
+
+       marker.on('mouseover', function(e){
+       //marker.openPopup();
+        
+     });
+        return marker;
+      }
+    }).addTo(map);
+
+     //debugger;
+     var popup = L.popup();
+     var count = 0;
+     var prevX = 0, prevY = 0, curX = 0, curY=0;
+
+//     for(count = 0; count < data.features.length; count++){
+//        popup.setLatLng(data.features[count].geometry.coordinates);
+//        popup.setContent(data.features[count].properties.Text);
+//        popup.openOn(map);
+//     }
+     
+    function myLoop () {           //  create a loop function
+       setTimeout(function () {    //  call a 3s setTimeout when the loop is called
+           map.closePopup();
+        //popup.setLatLng(data.features[count].geometry.coordinates);
+        curX = data.features[count].geometry.coordinates[1];
+        curY=data.features[count].geometry.coordinates[0];
+        var distance = Math.sqrt(Math.pow((prevX - curX), 2) + Math.pow((prevY - curY), 2));
+
+        while(distance<3){
+        	count++;
+        	curX = data.features[count].geometry.coordinates[1];
+        	curY=data.features[count].geometry.coordinates[0];
+        	distance = Math.sqrt(Math.pow((prevX - curX), 2) + Math.pow((prevY - curY), 2));
+        }
+        console.log(distance);
+
+        if(distance>3){
+        	popup.setLatLng([ data.features[count].geometry.coordinates[1] , data.features[count].geometry.coordinates[0]]);
+
+           	popup.setContent(data.features[count].properties.City + '<br/>' + data.features[count].properties.Text);
+            popup.openOn(map);
+        }
+
+
+        prevX = data.features[count].geometry.coordinates[1];
+        prevY=data.features[count].geometry.coordinates[0];
+        
+          count++;                     //  increment the counter
+          if (count < data.features.length) {            //  if the counter < 10, call the loop function
+             myLoop();             //  ..  again which will trigger another 
+          }                        //  ..  setTimeout()
+       }, 1000)
+    }
+     
+   myLoop();
+  
+//map.getSource('ll_gt.geojson').animate(1000);
+     console.log(data);
+   
+     
+
+//       $.each( data, function( key, val ) {
+//    items.push( "<li id='" + key + "'>" + val + "</li>" );
+//  });
+//     
+//setInterval(function () {
+//    var i = Math.floor(Math.random() * markers.length);
+//    google.maps.event.trigger(markers[i], 'click');
+//}, 3000);
+     
+});
+  </script>
+</body>
+</html>
+
+
